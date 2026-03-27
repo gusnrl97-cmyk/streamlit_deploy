@@ -42,7 +42,7 @@ st.markdown(
 st.warning(DISCLAIMER)
 
 if "df" not in st.session_state:
-    default_path = Path(r"C:\Users\user\Downloads\HOME_발전·판매_발전량_전원별.xlsx")
+    default_path = Path(__file__).resolve().parents[1] / "HOME_발전·판매_발전량_전원별.xlsx"
     if default_path.exists():
         try:
             auto_raw = pd.read_excel(default_path, header=[0, 1])
@@ -54,23 +54,8 @@ if "df" not in st.session_state:
             st.error(f"기본 데이터 자동 로드 실패: {e}")
             st.stop()
     else:
-        st.info("기본 데이터 파일이 없어 업로드가 필요합니다. (Streamlit Share 환경)")
-        uploaded = st.file_uploader("CSV 또는 XLSX 파일 업로드", type=["csv", "xlsx", "xls"])
-        if not uploaded:
-            st.stop()
-        try:
-            ext = uploaded.name.rsplit(".", 1)[-1].lower() if "." in uploaded.name else ""
-            if ext in ("xlsx", "xls"):
-                auto_raw = pd.read_excel(uploaded, header=[0, 1])
-            else:
-                auto_raw = pd.read_csv(uploaded)
-            st.session_state["raw_df"] = auto_raw
-            st.session_state["df"] = coerce_energy_schema(auto_raw)
-            st.session_state["data_filename"] = uploaded.name
-            st.success(f"업로드 데이터 로드 완료: {uploaded.name}")
-        except Exception as e:
-            st.error(f"업로드 데이터 처리 실패: {e}")
-            st.stop()
+        st.error("기본 데이터 파일을 찾을 수 없습니다: `HOME_발전·판매_발전량_전원별.xlsx`")
+        st.stop()
 
 df = st.session_state["df"].copy()
 required = {"연도", "수력", "기력", "복합화력", "원자력", "신재생"}
