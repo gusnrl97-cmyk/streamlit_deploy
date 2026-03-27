@@ -54,8 +54,23 @@ if "df" not in st.session_state:
             st.error(f"기본 데이터 자동 로드 실패: {e}")
             st.stop()
     else:
-        st.warning("기본 데이터 파일이 없어 `01_업로드_전처리`에서 파일 업로드가 필요합니다.")
-        st.stop()
+        st.info("기본 데이터 파일이 없어 업로드가 필요합니다. (Streamlit Share 환경)")
+        uploaded = st.file_uploader("CSV 또는 XLSX 파일 업로드", type=["csv", "xlsx", "xls"])
+        if not uploaded:
+            st.stop()
+        try:
+            ext = uploaded.name.rsplit(".", 1)[-1].lower() if "." in uploaded.name else ""
+            if ext in ("xlsx", "xls"):
+                auto_raw = pd.read_excel(uploaded, header=[0, 1])
+            else:
+                auto_raw = pd.read_csv(uploaded)
+            st.session_state["raw_df"] = auto_raw
+            st.session_state["df"] = coerce_energy_schema(auto_raw)
+            st.session_state["data_filename"] = uploaded.name
+            st.success(f"업로드 데이터 로드 완료: {uploaded.name}")
+        except Exception as e:
+            st.error(f"업로드 데이터 처리 실패: {e}")
+            st.stop()
 
 df = st.session_state["df"].copy()
 required = {"연도", "수력", "기력", "복합화력", "원자력", "신재생"}
